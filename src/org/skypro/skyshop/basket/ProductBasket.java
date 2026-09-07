@@ -15,6 +15,7 @@ public class ProductBasket {
         System.out.println("Невозможно добавить продукт");
     }
 
+
     public int getTotalPrice() {
         int total = 0;
         for (Product product : products) {
