@@ -1,3 +1,4 @@
+
 package org.skypro.skyshop.product;
 
 public abstract class Product {
@@ -13,7 +14,8 @@ public abstract class Product {
 
     public abstract int getPrice();
 
-    public boolean isSpecial() {
-        return false;
-    }
+    // Сделал isSpecial абстрактным — теперь каждый наследник сам решает,
+    // является ли он специальным товаром. Раньше тут был return false,
+    // но по заданию метод должен быть абстрактным.
+    public abstract boolean isSpecial();
 }

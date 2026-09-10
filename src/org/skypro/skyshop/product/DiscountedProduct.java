@@ -20,6 +20,8 @@ public class DiscountedProduct extends Product {
         return discountPercent;
     }
 
+    // Товар со скидкой — специальный, возвращаю true.
+    // Тут всё уже было правильно, ничего не менял.
     @Override
     public boolean isSpecial() {
         return true;

@@ -6,7 +6,6 @@ import org.skypro.skyshop.product.SimpleProduct;
 import org.skypro.skyshop.product.DiscountedProduct;
 import org.skypro.skyshop.product.FixPriceProduct;
 
-
 public class App {
     public static void main(String[] args) {
         Product bread = new SimpleProduct("Хлеб", 50);

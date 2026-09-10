@@ -12,6 +12,7 @@ public class FixPriceProduct extends Product {
         return FIXED_PRICE;
     }
 
+    // Товар с фиксированной ценой — тоже специальный. Тут ничего не менял.
     @Override
     public boolean isSpecial() {
         return true;

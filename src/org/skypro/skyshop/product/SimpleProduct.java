@@ -13,6 +13,13 @@ public class SimpleProduct extends Product {
         return price;
     }
 
+    // Так как isSpecial теперь абстрактный в Product,
+    // я обязан переопределить его здесь. Обычный товар — не специальный.
+    @Override
+    public boolean isSpecial() {
+        return false;
+    }
+
     @Override
     public String toString() {
         return getName() + ": " + getPrice();

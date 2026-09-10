@@ -15,7 +15,6 @@ public class ProductBasket {
         System.out.println("Невозможно добавить продукт");
     }
 
-
     public int getTotalPrice() {
         int total = 0;
         for (Product product : products) {
@@ -26,18 +25,26 @@ public class ProductBasket {
         return total;
     }
 
+    // Вынес логику подсчёта специальных товаров в отдельный метод.
+    // Раньше это считалось прямо внутри printContents —
+    // теперь printContents только печатает, а считает этот метод.
+    public int getSpecialCount() {
+        int count = 0;
+        for (Product product : products) {
+            if (product != null && product.isSpecial()) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     public void printContents() {
         boolean isEmpty = true;
-        int specialCount = 0;
 
         for (Product product : products) {
             if (product != null) {
                 isEmpty = false;
                 System.out.println(product.toString());
-
-                if (product.isSpecial()) {
-                    specialCount++;
-                }
             }
         }
 
@@ -45,11 +52,11 @@ public class ProductBasket {
             System.out.println("в корзине пусто");
         } else {
             System.out.println("Итого: " + getTotalPrice());
-            System.out.println("Специальных товаров: " + specialCount);
+            // Вместо переменной specialCount вызываю метод getSpecialCount()
+            System.out.println("Специальных товаров: " + getSpecialCount());
         }
     }
 
-    // ЭТОГО МЕТОДА НЕ ХВАТАЕТ — ДОБАВЬ ЕГО
     public boolean containsProduct(String name) {
         for (Product product : products) {
             if (product != null && product.getName().equals(name)) {
