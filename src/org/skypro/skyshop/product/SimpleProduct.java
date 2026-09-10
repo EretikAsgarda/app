@@ -1,10 +1,21 @@
 package org.skypro.skyshop.product;
 
+/**
+ * Простой товар с фиксированной ценой.
+ * Добавлена проверка: цена должна быть строго больше 0.
+ */
 public class SimpleProduct extends Product {
     private final int price;
 
     public SimpleProduct(String name, int price) {
-        super(name);
+        super(name); // Здесь сработает проверка названия из Product
+
+        if (price <= 0) {
+            throw new IllegalArgumentException(
+                    "Цена товара должна быть строго больше 0, передано: " + price
+            );
+        }
+
         this.price = price;
     }
 
@@ -13,8 +24,6 @@ public class SimpleProduct extends Product {
         return price;
     }
 
-    // Так как isSpecial теперь абстрактный в Product,
-    // я обязан переопределить его здесь. Обычный товар — не специальный.
     @Override
     public boolean isSpecial() {
         return false;

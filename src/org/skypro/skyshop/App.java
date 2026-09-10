@@ -7,6 +7,7 @@ import org.skypro.skyshop.product.FixPriceProduct;
 import org.skypro.skyshop.product.Article;
 import org.skypro.skyshop.search.SearchEngine;
 import org.skypro.skyshop.search.Searchable;
+import org.skypro.skyshop.search.BestResultNotFound;
 
 public class App {
     public static void main(String[] args) {
@@ -33,17 +34,14 @@ public class App {
 
 
         // --- 2. Поисковый движок ---
-        // Ёмкость 20 — хватит и для товаров, и для статей.
         SearchEngine searchEngine = new SearchEngine(20);
 
-        // Добавляю товары в поиск
         searchEngine.add(bread);
         searchEngine.add(milk);
         searchEngine.add(teaWithDiscount);
         searchEngine.add(fixItem);
         searchEngine.add(eggs);
 
-        // Создаю несколько статей и тоже добавляю в поиск
         Article articleBread = new Article(
                 "Как выбрать хлеб",
                 "Хлеб — один из самых популярных продуктов. При выборе обращайте внимание на состав и свежесть."
@@ -62,17 +60,75 @@ public class App {
         searchEngine.add(articleGeneral);
 
 
-        // --- 3. Демонстрация поиска ---
+        // --- 3. Демонстрация обычного поиска ---
         testSearch(searchEngine, "Хлеб");
         testSearch(searchEngine, "чай");
         testSearch(searchEngine, "скидка");
         testSearch(searchEngine, "советы");
         testSearch(searchEngine, "несуществующий запрос");
+
+
+        // --- 4. Демонстрация валидации (неправильные данные) ---
+        System.out.println("--- Демонстрация валидации ---");
+        try {
+            SimpleProduct badBread = new SimpleProduct(null, 50); // null-название
+        } catch (IllegalArgumentException e) {
+            System.out.println("Поймано исключение при создании товара: " + e.getMessage());
+        }
+
+        try {
+            SimpleProduct badMilk = new SimpleProduct("   ", 80); // название только из пробелов
+        } catch (IllegalArgumentException e) {
+            System.out.println("Поймано исключение при создании товара: " + e.getMessage());
+        }
+
+        try {
+            SimpleProduct badEggs = new SimpleProduct("Яйца", 0); // цена 0
+        } catch (IllegalArgumentException e) {
+            System.out.println("Поймано исключение при создании товара: " + e.getMessage());
+        }
+
+        try {
+            DiscountedProduct badTea = new DiscountedProduct("Плохой чай", -10, 20); // отрицательная цена
+        } catch (IllegalArgumentException e) {
+            System.out.println("Поймано исключение при создании товара: " + e.getMessage());
+        }
+
+        try {
+            DiscountedProduct badTea2 = new DiscountedProduct("Ещё плохой чай", 100, -5); // скидка -5%
+        } catch (IllegalArgumentException e) {
+            System.out.println("Поймано исключение при создании товара: " + e.getMessage());
+        }
+
+        try {
+            DiscountedProduct badTea3 = new DiscountedProduct("И ещё плохой чай", 100, 150); // скидка 150%
+        } catch (IllegalArgumentException e) {
+            System.out.println("Поймано исключение при создании товара: " + e.getMessage());
+        }
+
+
+        // --- 5. Демонстрация findBestMatch (когда есть результат) ---
+        System.out.println("\n--- Демонстрация findBestMatch (есть результат) ---");
+        try {
+            Searchable best = searchEngine.findBestMatch("чай");
+            System.out.println("Лучший результат для \"чай\": " + best.getStringRepresentation());
+        } catch (BestResultNotFound e) {
+            System.out.println(e.getMessage());
+        }
+
+
+        // --- 6. Демонстрация findBestMatch (когда нет результата) ---
+        System.out.println("\n--- Демонстрация findBestMatch (нет результата) ---");
+        try {
+            Searchable nonExisting = searchEngine.findBestMatch("несуществующий товар");
+            System.out.println("Лучший результат: " + nonExisting.getStringRepresentation());
+        } catch (BestResultNotFound e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     /**
-     * Вспомогательный метод, чтобы красиво вывести результаты поиска.
-     * Я вынес это в отдельный метод, чтобы main оставался чистым.
+     * Вспомогательный метод, чтобы красиво вывести результаты обычного поиска.
      */
     private static void testSearch(SearchEngine engine, String query) {
         System.out.println("--- Поиск по запросу: \"" + query + "\" ---");
