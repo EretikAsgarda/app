@@ -1,54 +1,177 @@
-package org.skypro.skyshop;          // «Адрес» этого класса: папка org/skypro/skyshop
-import org.skypro.skyshop.basket.ProductBasket;  // Подключаем класс корзины, чтобы можно было его использовать
-import org.skypro.skyshop.product.Product;       // Подключаем класс товара
+package org.skypro.skyshop;
+
+import org.skypro.skyshop.basket.ProductBasket;
+import org.skypro.skyshop.product.SimpleProduct;
+import org.skypro.skyshop.product.DiscountedProduct;
+import org.skypro.skyshop.product.FixPriceProduct;
+import org.skypro.skyshop.product.Article;
+import org.skypro.skyshop.product.Product;
+import org.skypro.skyshop.search.SearchEngine;
+import org.skypro.skyshop.search.Searchable;
+import org.skypro.skyshop.search.BestResultNotFound;
+
+import java.util.List;
+import java.util.Set;
 
 public class App {
     public static void main(String[] args) {
-        // Создаём товары: название и цена
-        Product bread = new Product("Хлеб", 50);      // Товар: Хлеб, 50 рублей
-        Product milk = new Product("Молоко", 80);     // Товар: Молоко, 80 рублей
-        Product eggs = new Product("Яйца", 120);     // Товар: Яйца, 120 рублей
-        Product tea = new Product("Чай", 200);       // Товар: Чай, 200 рублей
-        Product coffee = new Product("Кофе", 350);   // Товар: Кофе, 350 рублей
-        Product sugar = new Product("Сахар", 70);     // Товар: Сахар, 70 рублей
+        // --- 1. Корзина и товары ---
+        ProductBasket basket = new ProductBasket();
 
-        // Создаём одну корзину для покупок
-        ProductBasket basket = new ProductBasket();  // Пустая корзина на 5 товаров
+        SimpleProduct bread = new SimpleProduct("Хлеб", 50);
+        SimpleProduct milk = new SimpleProduct("Молоко", 80);
+        DiscountedProduct teaWithDiscount = new DiscountedProduct("Чай со скидкой", 200, 20);
+        FixPriceProduct fixItem = new FixPriceProduct("Фикс-товар");
+        SimpleProduct eggs = new SimpleProduct("Яйца", 120);
 
-        // 1. Добавляем 5 товаров (ровно столько, сколько влезает)
         basket.addProduct(bread);
         basket.addProduct(milk);
+        basket.addProduct(teaWithDiscount);
+        basket.addProduct(fixItem);
         basket.addProduct(eggs);
-        basket.addProduct(tea);
-        basket.addProduct(coffee);
+        // Раньше тут был товар «не влезет». Теперь корзина на Map — ограничений нет.
+        basket.addProduct(new SimpleProduct("Сахар", 70));
 
-        // 2. Пытаемся добавить шестой товар — корзина уже полная
-        basket.addProduct(sugar);                   // Будет выведено: «Невозможно добавить продукт»
-
-        // 3. Печатаем содержимое корзины
         System.out.println("----------------- Содержимое корзины -----------------");
-        basket.printContents();                     // Выведет все товары и «Итого: 800»
-
-        // 4. Получаем общую стоимость товаров в корзине
+        basket.printContents();
         System.out.println("Общая стоимость: " + basket.getTotalPrice());
+        System.out.println();
 
-        // 5. Проверяем, есть ли «Чай» в корзине (должен быть)
-        System.out.println("Есть ли «Чай» в корзине? " + basket.containsProduct("Чай"));
 
-        // 6. Проверяем, есть ли «Сахар» в корзине (его нет, потому что не влез)
-        System.out.println("Есть ли «Сахар» в корзине? " + basket.containsProduct("Сахар"));
+        // --- 2. Демонстрация removeProductByName ---
+        System.out.println("--- Удаление существующего продукта ---");
+        List<Product> removed = basket.removeProductByName("Хлеб");
+        System.out.println("Удалённые продукты:");
+        for (Product p : removed) {
+            System.out.println("  " + p.toString());
+        }
 
-        // 7. Очищаем корзину — делаем её пустой
-        basket.clear();                             // Все ячейки корзины становятся null
+        System.out.println("\nКорзина после удаления «Хлеб»:");
+        basket.printContents();
+        System.out.println();
 
-        // 8. Печатаем пустую корзину
-        System.out.println("----------------- Пустая корзина -----------------");
-        basket.printContents();                     // Будет: «в корзине пусто»
+        System.out.println("--- Удаление несуществующего продукта ---");
+        List<Product> removedNonExisting = basket.removeProductByName("Ананас");
+        if (removedNonExisting.isEmpty()) {
+            System.out.println("Список пуст");
+        }
+        System.out.println("\nКорзина после попытки удалить «Ананас»:");
+        basket.printContents();
+        System.out.println();
 
-        // 9. Стоимость пустой корзины
-        System.out.println("Общая стоимость пустой корзины: " + basket.getTotalPrice());
 
-        // 10. Ищем товар в пустой корзине
-        System.out.println("Есть ли «Хлеб» в пустой корзине? " + basket.containsProduct("Хлеб"));
+        // --- 3. Поисковый движок ---
+        SearchEngine searchEngine = new SearchEngine(20);
+
+        searchEngine.add(bread);
+        searchEngine.add(milk);
+        searchEngine.add(teaWithDiscount);
+        searchEngine.add(fixItem);
+        searchEngine.add(eggs);
+
+        Article articleBread = new Article(
+                "Как выбрать хлеб",
+                "Хлеб — один из самых популярных продуктов. При выборе обращайте внимание на состав и свежесть."
+        );
+        Article articleTea = new Article(
+                "Всё о чае",
+                "Чай бывает чёрным, зелёным, белым. Чай со скидкой — отличный повод попробовать новый сорт."
+        );
+        Article articleGeneral = new Article(
+                "Советы по покупкам",
+                "Планируйте покупки заранее, используйте скидки и фиксированные цены для экономии."
+        );
+
+        searchEngine.add(articleBread);
+        searchEngine.add(articleTea);
+        searchEngine.add(articleGeneral);
+
+
+        // --- 4. Демонстрация обычного поиска ---
+        testSearch(searchEngine, "Хлеб");
+        testSearch(searchEngine, "чай");
+        testSearch(searchEngine, "скидка");
+        testSearch(searchEngine, "советы");
+        testSearch(searchEngine, "несуществующий запрос");
+
+
+        // --- 5. Демонстрация валидации (неправильные данные) ---
+        System.out.println("--- Демонстрация валидации ---");
+        try {
+            SimpleProduct badBread = new SimpleProduct(null, 50); // null-название
+        } catch (IllegalArgumentException e) {
+            System.out.println("Поймано исключение при создании товара: " + e.getMessage());
+        }
+
+        try {
+            SimpleProduct badMilk = new SimpleProduct("   ", 80); // только пробелы
+        } catch (IllegalArgumentException e) {
+            System.out.println("Поймано исключение при создании товара: " + e.getMessage());
+        }
+
+        try {
+            SimpleProduct badEggs = new SimpleProduct("Яйца", 0); // цена 0
+        } catch (IllegalArgumentException e) {
+            System.out.println("Поймано исключение при создании товара: " + e.getMessage());
+        }
+
+        try {
+            DiscountedProduct badTea = new DiscountedProduct("Плохой чай", -10, 20); // отрицательная цена
+        } catch (IllegalArgumentException e) {
+            System.out.println("Поймано исключение при создании товара: " + e.getMessage());
+        }
+
+        try {
+            DiscountedProduct badTea2 = new DiscountedProduct("Ещё плохой чай", 100, -5); // скидка -5%
+        } catch (IllegalArgumentException e) {
+            System.out.println("Поймано исключение при создании товара: " + e.getMessage());
+        }
+
+        try {
+            DiscountedProduct badTea3 = new DiscountedProduct("И ещё плохой чай", 100, 150); // скидка 150%
+        } catch (IllegalArgumentException e) {
+            System.out.println("Поймано исключение при создании товара: " + e.getMessage());
+        }
+
+
+        // --- 6. Демонстрация findBestMatch (когда есть результат) ---
+        System.out.println("\n--- Демонстрация findBestMatch (есть результат) ---");
+        try {
+            Searchable best = searchEngine.findBestMatch("чай");
+            System.out.println("Лучший результат для \"чай\": " + best.getStringRepresentation());
+        } catch (BestResultNotFound e) {
+            System.out.println(e.getMessage());
+        }
+
+
+        // --- 7. Демонстрация findBestMatch (когда нет результата) ---
+        System.out.println("\n--- Демонстрация findBestMatch (нет результата) ---");
+        try {
+            Searchable nonExisting = searchEngine.findBestMatch("несуществующий товар");
+            System.out.println("Лучший результат: " + nonExisting.getStringRepresentation());
+        } catch (BestResultNotFound e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    /**
+     * Вспомогательный метод для вывода результатов поиска.
+     * Я поменял тип результата с Map<String, Searchable> на Set<Searchable>,
+     * потому что search теперь возвращает TreeSet, отсортированный по длине имени.
+     * TreeMap больше не нужен — сортировку делает компаратор внутри TreeSet.
+     */
+    private static void testSearch(SearchEngine engine, String query) {
+        System.out.println("--- Поиск по запросу: \"" + query + "\" ---");
+        Set<Searchable> results = engine.search(query);
+
+        if (results.isEmpty()) {
+            System.out.println("Ничего не найдено");
+        } else {
+            // TreeSet уже отсортирован компаратором, просто перебираю
+            for (Searchable item : results) {
+                System.out.println(item.getStringRepresentation());
+            }
+        }
+        System.out.println();
     }
 }
