@@ -2,36 +2,37 @@ package org.skypro.skyshop.basket;
 
 import org.skypro.skyshop.product.Product;
 
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Корзина товаров.
+ * Я заменил массив на ArrayList — теперь корзина не фиксированного размера.
+ * Это удобнее: не нужно следить за вместимостью и выводить сообщение «Невозможно добавить».
+ */
 public class ProductBasket {
-    private final Product[] products = new Product[5];
+    // Я поменял массив на список. ArrayList подходит: мы только добавляем и удаляем,
+    // обращения по индексу нет. Размер растёт автоматически.
+    private final List<Product> products = new ArrayList<>();
 
     public void addProduct(Product product) {
-        for (int i = 0; i < products.length; i++) {
-            if (products[i] == null) {
-                products[i] = product;
-                return;
-            }
-        }
-        System.out.println("Невозможно добавить продукт");
+        products.add(product);
+        // Раньше тут был код с проверкой вместимости и выводом «Невозможно добавить продукт».
+        // Теперь список не ограничен, поэтому проверка не нужна — просто удалил.
     }
 
     public int getTotalPrice() {
         int total = 0;
         for (Product product : products) {
-            if (product != null) {
-                total += product.getPrice();
-            }
+            total += product.getPrice();
         }
         return total;
     }
 
-    // Вынес логику подсчёта специальных товаров в отдельный метод.
-    // Раньше это считалось прямо внутри printContents —
-    // теперь printContents только печатает, а считает этот метод.
     public int getSpecialCount() {
         int count = 0;
         for (Product product : products) {
-            if (product != null && product.isSpecial()) {
+            if (product.isSpecial()) {
                 count++;
             }
         }
@@ -39,36 +40,50 @@ public class ProductBasket {
     }
 
     public void printContents() {
-        boolean isEmpty = true;
+        // Проверяю isEmpty() у списка — проще и понятнее, чем флаг isEmpty
+        if (products.isEmpty()) {
+            System.out.println("в корзине пусто");
+            return;
+        }
 
         for (Product product : products) {
-            if (product != null) {
-                isEmpty = false;
-                System.out.println(product.toString());
-            }
+            System.out.println(product.toString());
         }
 
-        if (isEmpty) {
-            System.out.println("в корзине пусто");
-        } else {
-            System.out.println("Итого: " + getTotalPrice());
-            // Вместо переменной specialCount вызываю метод getSpecialCount()
-            System.out.println("Специальных товаров: " + getSpecialCount());
-        }
+        System.out.println("Итого: " + getTotalPrice());
+        System.out.println("Специальных товаров: " + getSpecialCount());
     }
 
     public boolean containsProduct(String name) {
         for (Product product : products) {
-            if (product != null && product.getName().equals(name)) {
+            if (product.getName().equals(name)) {
                 return true;
             }
         }
         return false;
     }
 
-    public void clear() {
-        for (int i = 0; i < products.length; i++) {
-            products[i] = null;
+    /**
+     * Я добавил метод removeProductByName: удаляет все товары с указанным именем.
+     * Возвращает список удалённых товаров. Если ничего не найдено — список пустой.
+     */
+    public List<Product> removeProductByName(String name) {
+        List<Product> removed = new ArrayList<>();
+
+        // Перебираю корзину и собираю товары с совпадающим именем
+        for (Product product : products) {
+            if (product.getName().equals(name)) {
+                removed.add(product);
+            }
         }
+
+        // Удаляю все найденные товары из корзины
+        products.removeAll(removed);
+
+        return removed;
+    }
+
+    public void clear() {
+        products.clear();
     }
 }

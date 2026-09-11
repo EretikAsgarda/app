@@ -5,13 +5,16 @@ import org.skypro.skyshop.product.SimpleProduct;
 import org.skypro.skyshop.product.DiscountedProduct;
 import org.skypro.skyshop.product.FixPriceProduct;
 import org.skypro.skyshop.product.Article;
+import org.skypro.skyshop.product.Product;
 import org.skypro.skyshop.search.SearchEngine;
 import org.skypro.skyshop.search.Searchable;
 import org.skypro.skyshop.search.BestResultNotFound;
 
+import java.util.List;
+
 public class App {
     public static void main(String[] args) {
-        // --- 1. Корзина и товары (как раньше) ---
+        // --- 1. Корзина и товары ---
         ProductBasket basket = new ProductBasket();
 
         SimpleProduct bread = new SimpleProduct("Хлеб", 50);
@@ -25,7 +28,12 @@ public class App {
         basket.addProduct(teaWithDiscount);
         basket.addProduct(fixItem);
         basket.addProduct(eggs);
-        basket.addProduct(new SimpleProduct("Сахар", 70)); // не влезет
+
+        // Раньше тут был 6-й товар с комментарием «не влезет».
+        // Я убрал его: корзина теперь на списке, ограничений нет.
+        // Можно добавить сколько угодно — но по сценарию демо нам хватит пяти.
+        // Я добавил ещё один товар с тем же именем, чтобы демо removeProductByName было нагляднее
+        basket.addProduct(new SimpleProduct("Хлеб", 45));
 
         System.out.println("----------------- Содержимое корзины -----------------");
         basket.printContents();
@@ -33,7 +41,29 @@ public class App {
         System.out.println();
 
 
-        // --- 2. Поисковый движок ---
+        // --- 2. Демонстрация removeProductByName ---
+        System.out.println("--- Удаление существующего продукта ---");
+        List<Product> removed = basket.removeProductByName("Хлеб");
+        System.out.println("Удалённые продукты:");
+        for (Product p : removed) {
+            System.out.println("  " + p.toString());
+        }
+
+        System.out.println("\nКорзина после удаления «Хлеб»:");
+        basket.printContents();
+        System.out.println();
+
+        System.out.println("--- Удаление несуществующего продукта ---");
+        List<Product> removedNonExisting = basket.removeProductByName("Сахар");
+        if (removedNonExisting.isEmpty()) {
+            System.out.println("Список пуст");
+        }
+        System.out.println("\nКорзина после попытки удалить «Сахар»:");
+        basket.printContents();
+        System.out.println();
+
+
+        // --- 3. Поисковый движок ---
         SearchEngine searchEngine = new SearchEngine(20);
 
         searchEngine.add(bread);
@@ -60,7 +90,8 @@ public class App {
         searchEngine.add(articleGeneral);
 
 
-        // --- 3. Демонстрация обычного поиска ---
+        // --- 4. Демонстрация обычного поиска ---
+        // Я поменял testSearch: теперь он принимает List, а не массив.
         testSearch(searchEngine, "Хлеб");
         testSearch(searchEngine, "чай");
         testSearch(searchEngine, "скидка");
@@ -68,46 +99,46 @@ public class App {
         testSearch(searchEngine, "несуществующий запрос");
 
 
-        // --- 4. Демонстрация валидации (неправильные данные) ---
+        // --- 5. Демонстрация валидации (неправильные данные) ---
         System.out.println("--- Демонстрация валидации ---");
         try {
-            SimpleProduct badBread = new SimpleProduct(null, 50); // null-название
+            SimpleProduct badBread = new SimpleProduct(null, 50);
         } catch (IllegalArgumentException e) {
             System.out.println("Поймано исключение при создании товара: " + e.getMessage());
         }
 
         try {
-            SimpleProduct badMilk = new SimpleProduct("   ", 80); // название только из пробелов
+            SimpleProduct badMilk = new SimpleProduct("   ", 80);
         } catch (IllegalArgumentException e) {
             System.out.println("Поймано исключение при создании товара: " + e.getMessage());
         }
 
         try {
-            SimpleProduct badEggs = new SimpleProduct("Яйца", 0); // цена 0
+            SimpleProduct badEggs = new SimpleProduct("Яйца", 0);
         } catch (IllegalArgumentException e) {
             System.out.println("Поймано исключение при создании товара: " + e.getMessage());
         }
 
         try {
-            DiscountedProduct badTea = new DiscountedProduct("Плохой чай", -10, 20); // отрицательная цена
+            DiscountedProduct badTea = new DiscountedProduct("Плохой чай", -10, 20);
         } catch (IllegalArgumentException e) {
             System.out.println("Поймано исключение при создании товара: " + e.getMessage());
         }
 
         try {
-            DiscountedProduct badTea2 = new DiscountedProduct("Ещё плохой чай", 100, -5); // скидка -5%
+            DiscountedProduct badTea2 = new DiscountedProduct("Ещё плохой чай", 100, -5);
         } catch (IllegalArgumentException e) {
             System.out.println("Поймано исключение при создании товара: " + e.getMessage());
         }
 
         try {
-            DiscountedProduct badTea3 = new DiscountedProduct("И ещё плохой чай", 100, 150); // скидка 150%
+            DiscountedProduct badTea3 = new DiscountedProduct("И ещё плохой чай", 100, 150);
         } catch (IllegalArgumentException e) {
             System.out.println("Поймано исключение при создании товара: " + e.getMessage());
         }
 
 
-        // --- 5. Демонстрация findBestMatch (когда есть результат) ---
+        // --- 6. Демонстрация findBestMatch (когда есть результат) ---
         System.out.println("\n--- Демонстрация findBestMatch (есть результат) ---");
         try {
             Searchable best = searchEngine.findBestMatch("чай");
@@ -117,7 +148,7 @@ public class App {
         }
 
 
-        // --- 6. Демонстрация findBestMatch (когда нет результата) ---
+        // --- 7. Демонстрация findBestMatch (когда нет результата) ---
         System.out.println("\n--- Демонстрация findBestMatch (нет результата) ---");
         try {
             Searchable nonExisting = searchEngine.findBestMatch("несуществующий товар");
@@ -128,22 +159,20 @@ public class App {
     }
 
     /**
-     * Вспомогательный метод, чтобы красиво вывести результаты обычного поиска.
+     * Вспомогательный метод для вывода результатов поиска.
+     * Я поменял тип результата с Searchable[] на List<Searchable>,
+     * потому что search теперь возвращает список, а не массив.
      */
     private static void testSearch(SearchEngine engine, String query) {
         System.out.println("--- Поиск по запросу: \"" + query + "\" ---");
-        Searchable[] results = engine.search(query);
+        List<Searchable> results = engine.search(query);
 
-        boolean hasResults = false;
-        for (Searchable item : results) {
-            if (item != null) {
-                hasResults = true;
+        if (results.isEmpty()) {
+            System.out.println("Ничего не найдено");
+        } else {
+            for (Searchable item : results) {
                 System.out.println(item.getStringRepresentation());
             }
-        }
-
-        if (!hasResults) {
-            System.out.println("Ничего не найдено");
         }
         System.out.println();
     }

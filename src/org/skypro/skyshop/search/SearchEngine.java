@@ -1,53 +1,46 @@
 package org.skypro.skyshop.search;
 
-import org.skypro.skyshop.product.Article;
-import org.skypro.skyshop.product.Product;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Поисковый движок.
- * Хранит массив Searchable, умеет искать до 5 совпадений (search)
- * и находить «самый подходящий» элемент (findBestMatch).
+ * Я заменил массив на ArrayList — структура стала проще, не нужно следить за size.
+ * Метод search теперь возвращает ВСЕ подходящие результаты в виде List,
+ * а не только первые 5, как раньше.
  */
 public class SearchEngine {
-    private final Searchable[] items;
-    private int size = 0;
+    // Я поменял массив на список. ArrayList — удобно добавлять, перебирать.
+    private final List<Searchable> items = new ArrayList<>();
 
+    /**
+     * Конструктор. Раньше принимал ёмкость массива — теперь она не нужна,
+     * но я оставил параметр, чтобы не ломать вызов в main. Просто игнорирую его.
+     */
     public SearchEngine(int capacity) {
-        if (capacity <= 0) {
-            throw new IllegalArgumentException("Ёмкость должна быть больше 0");
-        }
-        this.items = new Searchable[capacity];
-    }
-
-    public void add(Searchable item) {
-        if (size >= items.length) {
-            System.out.println("Не удалось добавить элемент: индекс заполнен.");
-            return;
-        }
-        items[size] = item;
-        size++;
+        // Ёмкость не нужна, ArrayList растёт сам.
+        // Параметр оставил для совместимости с существующим кодом.
     }
 
     /**
-     * Обычный поиск: возвращает до 5 совпадений.
+     * Добавить объект в поисковый индекс.
+     * Проверка на переполнение больше не нужна — список растёт автоматически.
      */
-    public Searchable[] search(String query) {
-        Searchable[] results = new Searchable[5];
-        int count = 0;
+    public void add(Searchable item) {
+        items.add(item);
+    }
 
-        for (int i = 0; i < size; i++) {
-            Searchable item = items[i];
-            if (item == null) {
-                continue;
-            }
+    /**
+     * Поиск по строке. Возвращает ВСЕ совпадения, а не только 5, как раньше.
+     * Логика та же: перебираю все элементы, беру getSearchTerm(), проверяю contains.
+     */
+    public List<Searchable> search(String query) {
+        List<Searchable> results = new ArrayList<>();
 
+        for (Searchable item : items) {
             String searchTerm = item.getSearchTerm();
             if (searchTerm != null && searchTerm.contains(query)) {
-                results[count] = item;
-                count++;
-                if (count == 5) {
-                    break;
-                }
+                results.add(item);
             }
         }
 
@@ -67,18 +60,12 @@ public class SearchEngine {
         Searchable bestMatch = null;
         int bestCount = -1;
 
-        for (int i = 0; i < size; i++) {
-            Searchable item = items[i];
-            if (item == null) {
-                continue;
-            }
-
+        for (Searchable item : items) {
             String searchTerm = item.getSearchTerm();
             if (searchTerm == null) {
                 continue;
             }
 
-            // Считаем, сколько раз встречается подстрока query в searchTerm
             int count = countOccurrences(searchTerm, query);
 
             if (count > bestCount) {
@@ -96,7 +83,6 @@ public class SearchEngine {
 
     /**
      * Вспомогательный метод: считает, сколько раз подстрока sub встречается в строке str.
-     * Работает корректно даже при перекрывающихся вхождениях (хотя для простых запросов это не критично).
      */
     private int countOccurrences(String str, String sub) {
         if (sub.isEmpty() || str.length() < sub.length()) {
@@ -108,7 +94,7 @@ public class SearchEngine {
 
         while ((index = str.indexOf(sub, index)) != -1) {
             count++;
-            index += sub.length(); // Сдвигаем вперёд, чтобы не зациклиться
+            index += sub.length();
         }
 
         return count;
