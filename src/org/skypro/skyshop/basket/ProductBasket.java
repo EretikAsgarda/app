@@ -3,51 +3,61 @@ package org.skypro.skyshop.basket;
 import org.skypro.skyshop.product.Product;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Корзина товаров.
- * Я заменил массив на ArrayList — теперь корзина не фиксированного размера.
- * Это удобнее: не нужно следить за вместимостью и выводить сообщение «Невозможно добавить».
+ * Я заменил список на Map: ключ — имя товара, значение — список товаров с этим именем.
+ * Использую HashMap, потому что у нас есть несколько операций получения товаров по имени —
+ * HashMap даёт быстрый доступ по ключу.
  */
 public class ProductBasket {
-    // Я поменял массив на список. ArrayList подходит: мы только добавляем и удаляем,
-    // обращения по индексу нет. Размер растёт автоматически.
-    private final List<Product> products = new ArrayList<>();
+    private final Map<String, List<Product>> products = new HashMap<>();
 
     public void addProduct(Product product) {
-        products.add(product);
-        // Раньше тут был код с проверкой вместимости и выводом «Невозможно добавить продукт».
-        // Теперь список не ограничен, поэтому проверка не нужна — просто удалил.
+        // Получаю список товаров с таким именем. Если его нет — создаю новый.
+        String name = product.getName();
+        if (!products.containsKey(name)) {
+            products.put(name, new ArrayList<>());
+        }
+        products.get(name).add(product);
     }
 
     public int getTotalPrice() {
         int total = 0;
-        for (Product product : products) {
-            total += product.getPrice();
+        // Перебираю все значения мапы (каждый — список товаров), потом товары внутри списка
+        for (List<Product> list : products.values()) {
+            for (Product product : list) {
+                total += product.getPrice();
+            }
         }
         return total;
     }
 
     public int getSpecialCount() {
         int count = 0;
-        for (Product product : products) {
-            if (product.isSpecial()) {
-                count++;
+        for (List<Product> list : products.values()) {
+            for (Product product : list) {
+                if (product.isSpecial()) {
+                    count++;
+                }
             }
         }
         return count;
     }
 
     public void printContents() {
-        // Проверяю isEmpty() у списка — проще и понятнее, чем флаг isEmpty
         if (products.isEmpty()) {
             System.out.println("в корзине пусто");
             return;
         }
 
-        for (Product product : products) {
-            System.out.println(product.toString());
+        for (List<Product> list : products.values()) {
+            for (Product product : list) {
+                System.out.println(product.toString());
+            }
         }
 
         System.out.println("Итого: " + getTotalPrice());
@@ -55,31 +65,19 @@ public class ProductBasket {
     }
 
     public boolean containsProduct(String name) {
-        for (Product product : products) {
-            if (product.getName().equals(name)) {
-                return true;
-            }
-        }
-        return false;
+        // Теперь проверка — просто containsKey, без перебора. Быстро и просто.
+        return products.containsKey(name);
     }
 
     /**
-     * Я добавил метод removeProductByName: удаляет все товары с указанным именем.
-     * Возвращает список удалённых товаров. Если ничего не найдено — список пустой.
+     * Удаляет все товары с указанным именем.
+     * Теперь это просто remove по ключу — намного быстрее, чем перебирать список.
      */
     public List<Product> removeProductByName(String name) {
-        List<Product> removed = new ArrayList<>();
-
-        // Перебираю корзину и собираю товары с совпадающим именем
-        for (Product product : products) {
-            if (product.getName().equals(name)) {
-                removed.add(product);
-            }
+        List<Product> removed = products.remove(name);
+        if (removed == null) {
+            return new ArrayList<>();
         }
-
-        // Удаляю все найденные товары из корзины
-        products.removeAll(removed);
-
         return removed;
     }
 

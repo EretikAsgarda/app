@@ -11,6 +11,7 @@ import org.skypro.skyshop.search.Searchable;
 import org.skypro.skyshop.search.BestResultNotFound;
 
 import java.util.List;
+import java.util.Map;
 
 public class App {
     public static void main(String[] args) {
@@ -28,12 +29,8 @@ public class App {
         basket.addProduct(teaWithDiscount);
         basket.addProduct(fixItem);
         basket.addProduct(eggs);
-
-        // Раньше тут был 6-й товар с комментарием «не влезет».
-        // Я убрал его: корзина теперь на списке, ограничений нет.
-        // Можно добавить сколько угодно — но по сценарию демо нам хватит пяти.
-        // Я добавил ещё один товар с тем же именем, чтобы демо removeProductByName было нагляднее
-        basket.addProduct(new SimpleProduct("Хлеб", 45));
+        // Раньше тут был товар «не влезет». Теперь корзина на Map — ограничений нет.
+        basket.addProduct(new SimpleProduct("Сахар", 70));
 
         System.out.println("----------------- Содержимое корзины -----------------");
         basket.printContents();
@@ -54,11 +51,11 @@ public class App {
         System.out.println();
 
         System.out.println("--- Удаление несуществующего продукта ---");
-        List<Product> removedNonExisting = basket.removeProductByName("Сахар");
+        List<Product> removedNonExisting = basket.removeProductByName("Ананас");
         if (removedNonExisting.isEmpty()) {
             System.out.println("Список пуст");
         }
-        System.out.println("\nКорзина после попытки удалить «Сахар»:");
+        System.out.println("\nКорзина после попытки удалить «Ананас»:");
         basket.printContents();
         System.out.println();
 
@@ -91,7 +88,6 @@ public class App {
 
 
         // --- 4. Демонстрация обычного поиска ---
-        // Я поменял testSearch: теперь он принимает List, а не массив.
         testSearch(searchEngine, "Хлеб");
         testSearch(searchEngine, "чай");
         testSearch(searchEngine, "скидка");
@@ -102,37 +98,37 @@ public class App {
         // --- 5. Демонстрация валидации (неправильные данные) ---
         System.out.println("--- Демонстрация валидации ---");
         try {
-            SimpleProduct badBread = new SimpleProduct(null, 50);
+            SimpleProduct badBread = new SimpleProduct(null, 50); // null-название
         } catch (IllegalArgumentException e) {
             System.out.println("Поймано исключение при создании товара: " + e.getMessage());
         }
 
         try {
-            SimpleProduct badMilk = new SimpleProduct("   ", 80);
+            SimpleProduct badMilk = new SimpleProduct("   ", 80); // только пробелы
         } catch (IllegalArgumentException e) {
             System.out.println("Поймано исключение при создании товара: " + e.getMessage());
         }
 
         try {
-            SimpleProduct badEggs = new SimpleProduct("Яйца", 0);
+            SimpleProduct badEggs = new SimpleProduct("Яйца", 0); // цена 0
         } catch (IllegalArgumentException e) {
             System.out.println("Поймано исключение при создании товара: " + e.getMessage());
         }
 
         try {
-            DiscountedProduct badTea = new DiscountedProduct("Плохой чай", -10, 20);
+            DiscountedProduct badTea = new DiscountedProduct("Плохой чай", -10, 20); // отрицательная цена
         } catch (IllegalArgumentException e) {
             System.out.println("Поймано исключение при создании товара: " + e.getMessage());
         }
 
         try {
-            DiscountedProduct badTea2 = new DiscountedProduct("Ещё плохой чай", 100, -5);
+            DiscountedProduct badTea2 = new DiscountedProduct("Ещё плохой чай", 100, -5); // скидка -5%
         } catch (IllegalArgumentException e) {
             System.out.println("Поймано исключение при создании товара: " + e.getMessage());
         }
 
         try {
-            DiscountedProduct badTea3 = new DiscountedProduct("И ещё плохой чай", 100, 150);
+            DiscountedProduct badTea3 = new DiscountedProduct("И ещё плохой чай", 100, 150); // скидка 150%
         } catch (IllegalArgumentException e) {
             System.out.println("Поймано исключение при создании товара: " + e.getMessage());
         }
@@ -160,18 +156,19 @@ public class App {
 
     /**
      * Вспомогательный метод для вывода результатов поиска.
-     * Я поменял тип результата с Searchable[] на List<Searchable>,
-     * потому что search теперь возвращает список, а не массив.
+     * Я поменял тип результата на Map<String, Searchable>,
+     * потому что search теперь возвращает мапу, отсортированную по имени через TreeMap.
      */
     private static void testSearch(SearchEngine engine, String query) {
         System.out.println("--- Поиск по запросу: \"" + query + "\" ---");
-        List<Searchable> results = engine.search(query);
+        Map<String, Searchable> results = engine.search(query);
 
         if (results.isEmpty()) {
             System.out.println("Ничего не найдено");
         } else {
-            for (Searchable item : results) {
-                System.out.println(item.getStringRepresentation());
+            // TreeMap уже отсортирован по ключу (по имени), просто перебираю
+            for (Map.Entry<String, Searchable> entry : results.entrySet()) {
+                System.out.println(entry.getValue().getStringRepresentation());
             }
         }
         System.out.println();

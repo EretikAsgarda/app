@@ -2,45 +2,40 @@ package org.skypro.skyshop.search;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Поисковый движок.
- * Я заменил массив на ArrayList — структура стала проще, не нужно следить за size.
- * Метод search теперь возвращает ВСЕ подходящие результаты в виде List,
- * а не только первые 5, как раньше.
+ * Я поменял внутреннее хранилище со списка на... список (он и раньше был списком).
+ * Главное изменение — метод search теперь возвращает Map<String, Searchable>,
+ * отсортированную по имени через TreeMap.
  */
 public class SearchEngine {
-    // Я поменял массив на список. ArrayList — удобно добавлять, перебирать.
     private final List<Searchable> items = new ArrayList<>();
 
     /**
-     * Конструктор. Раньше принимал ёмкость массива — теперь она не нужна,
-     * но я оставил параметр, чтобы не ломать вызов в main. Просто игнорирую его.
+     * Конструктор. Параметр capacity оставил для совместимости, он больше не нужен.
      */
     public SearchEngine(int capacity) {
-        // Ёмкость не нужна, ArrayList растёт сам.
-        // Параметр оставил для совместимости с существующим кодом.
+        // ArrayList растёт сам, ёмкость не нужна
     }
 
-    /**
-     * Добавить объект в поисковый индекс.
-     * Проверка на переполнение больше не нужна — список растёт автоматически.
-     */
     public void add(Searchable item) {
         items.add(item);
     }
 
     /**
-     * Поиск по строке. Возвращает ВСЕ совпадения, а не только 5, как раньше.
-     * Логика та же: перебираю все элементы, беру getSearchTerm(), проверяю contains.
+     * Поиск по строке. Теперь возвращает Map<String, Searchable>, отсортированную по имени.
+     * Использую TreeMap — он автоматически сортирует ключи по алфавиту.
      */
-    public List<Searchable> search(String query) {
-        List<Searchable> results = new ArrayList<>();
+    public Map<String, Searchable> search(String query) {
+        Map<String, Searchable> results = new TreeMap<>();
 
         for (Searchable item : items) {
             String searchTerm = item.getSearchTerm();
             if (searchTerm != null && searchTerm.contains(query)) {
-                results.add(item);
+                results.put(item.getName(), item);
             }
         }
 
