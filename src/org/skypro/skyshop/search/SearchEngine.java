@@ -1,41 +1,63 @@
 package org.skypro.skyshop.search;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Поисковый движок.
- * Я поменял внутреннее хранилище со списка на... список (он и раньше был списком).
- * Главное изменение — метод search теперь возвращает Map<String, Searchable>,
- * отсортированную по имени через TreeMap.
+ * Я заменил List на HashSet — теперь дубликаты не добавляются.
+ * Метод search возвращает TreeSet<Searchable> с сортировкой:
+ * сначала самые длинные имена, при равенстве длины — натуральный порядок.
  */
 public class SearchEngine {
-    private final List<Searchable> items = new ArrayList<>();
+    // Я поменял List на HashSet. Дубликаты больше не пройдут,
+    // потому что в Product и Article реализованы equals и hashCode по имени.
+    private final Set<Searchable> items = new HashSet<>();
 
     /**
      * Конструктор. Параметр capacity оставил для совместимости, он больше не нужен.
      */
     public SearchEngine(int capacity) {
-        // ArrayList растёт сам, ёмкость не нужна
+        // HashSet растёт сам, ёмкость не нужна
     }
 
     public void add(Searchable item) {
+        // HashSet автоматически отбросит дубликат, если equals и hashCode совпадают.
         items.add(item);
     }
 
     /**
-     * Поиск по строке. Теперь возвращает Map<String, Searchable>, отсортированную по имени.
-     * Использую TreeMap — он автоматически сортирует ключи по алфавиту.
+     * Поиск по строке. Теперь возвращает Set<Searchable>, отсортированный по длине имени
+     * (от самого длинного к самому короткому), при равенстве длины — натуральный порядок.
+     *
+     * Я использую TreeSet с компаратором из двух частей:
+     * 1. Сравнение длины имён через Integer.compare (по убыванию — длинные первыми).
+     * 2. Если длины равны — сравнение имён через compareTo (натуральный порядок).
      */
-    public Map<String, Searchable> search(String query) {
-        Map<String, Searchable> results = new TreeMap<>();
+    public Set<Searchable> search(String query) {
+        // Создаю TreeSet с компаратором
+        Set<Searchable> results = new TreeSet<>(new Comparator<Searchable>() {
+            @Override
+            public int compare(Searchable a, Searchable b) {
+                // Часть 1: сравниваю длины имён. b сначала — чтобы длинные были в начале.
+                int lenCompare = Integer.compare(
+                        b.getName().length(),
+                        a.getName().length()
+                );
+                // Часть 2: если длины одинаковые — натуральный порядок по имени
+                if (lenCompare != 0) {
+                    return lenCompare;
+                }
+                return a.getName().compareTo(b.getName());
+            }
+        });
 
         for (Searchable item : items) {
             String searchTerm = item.getSearchTerm();
             if (searchTerm != null && searchTerm.contains(query)) {
-                results.put(item.getName(), item);
+                results.add(item);
             }
         }
 

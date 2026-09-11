@@ -11,7 +11,7 @@ import org.skypro.skyshop.search.Searchable;
 import org.skypro.skyshop.search.BestResultNotFound;
 
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 public class App {
     public static void main(String[] args) {
@@ -154,21 +154,22 @@ public class App {
         }
     }
 
-    /***
+    /**
      * Вспомогательный метод для вывода результатов поиска.
-     * Я поменял тип результата на Map<String, Searchable>,
-     * потому что search теперь возвращает мапу, отсортированную по имени через TreeMap.
+     * Я поменял тип результата с Map<String, Searchable> на Set<Searchable>,
+     * потому что search теперь возвращает TreeSet, отсортированный по длине имени.
+     * TreeMap больше не нужен — сортировку делает компаратор внутри TreeSet.
      */
     private static void testSearch(SearchEngine engine, String query) {
         System.out.println("--- Поиск по запросу: \"" + query + "\" ---");
-        Map<String, Searchable> results = engine.search(query);
+        Set<Searchable> results = engine.search(query);
 
         if (results.isEmpty()) {
             System.out.println("Ничего не найдено");
         } else {
-            // TreeMap уже отсортирован по ключу (по имени), просто перебираю
-            for (Map.Entry<String, Searchable> entry : results.entrySet()) {
-                System.out.println(entry.getValue().getStringRepresentation());
+            // TreeSet уже отсортирован компаратором, просто перебираю
+            for (Searchable item : results) {
+                System.out.println(item.getStringRepresentation());
             }
         }
         System.out.println();

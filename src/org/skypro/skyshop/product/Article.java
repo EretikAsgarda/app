@@ -2,9 +2,14 @@ package org.skypro.skyshop.product;
 
 import org.skypro.skyshop.search.Searchable;
 
+import java.util.Objects;
+
 /**
  * Статья о товаре.
  * Добавлены проверки: заголовок и текст не могут быть null или состоять только из пробелов.
+ *
+ * Я добавил equals и hashCode по заголовку (title) — статей с одинаковым именем не должно быть.
+ * Это нужно для работы HashSet в SearchEngine: дубликаты не пройдут.
  */
 public class Article implements Searchable {
     private final String title;
@@ -57,5 +62,22 @@ public class Article implements Searchable {
     @Override
     public String getStringRepresentation() {
         return title + " (статья)";
+    }
+
+    /**
+     * Я добавил equals и hashCode по заголовку (title).
+     * Статей с одинаковым именем быть не должно — это ключ для сравнения.
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Article article = (Article) o;
+        return Objects.equals(title, article.title);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(title);
     }
 }
